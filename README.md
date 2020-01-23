@@ -1,13 +1,13 @@
 # S<sup>2​</sup>OMGAN​
 
-Pytorch code for the paper "S<sup>2</sup>OMGAN: Shortcut from Remote Sensing Images to Online Maps" by Xu Chen, Songqiang Chen, Tian Xu, Bangguo Yin, Jian Peng, Xiaoming Mei and Haifeng Li.
+Pytorch code for the [paper](https://arxiv.org/pdf/2001.07712) "S<sup>2</sup>OMGAN: Shortcut from Remote Sensing Images to Online Maps" by Xu Chen, Songqiang Chen, Tian Xu, Bangguo Yin, Jian Peng, Xiaoming Mei and Haifeng Li.
 
 This project contains the implements of CycleGAN, Pix2pix, S<sup>2</sup>OMGAN and its ablation versions.
 
 ## Prerequisites
 
-- Linux or macOS
 - Python 3
+- PyTorch 0.4+ (check requirements.txt for more detail)
 - NVIDIA GPU + CUDA CuDNN
 
 ## Getting Started
