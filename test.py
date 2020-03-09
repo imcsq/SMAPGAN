@@ -124,4 +124,5 @@ if __name__ == '__main__':
         if i % 1 == 0:  # save images to an HTML file
             print('processing (%04d)-th image... %s' % (len(img_path)+(i)*opt.batch_size, ''), 'cost', time.time()-lasttime, 'seconds')
             lasttime = time.time()
-    
+        save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
+    webpage.save()  # save the HTML
