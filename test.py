@@ -91,7 +91,7 @@ def compute_ssim(im1, im2, k1=0.01, k2=0.03, win_size=11, L=255):
 
 if __name__ == '__main__':
     opt = TestOptions().parse()  # get test options
-    opt.epoch = 200
+#     opt.epoch = 200
     # hard-code some parameters for test
     opt.num_threads = 0   # test code only supports num_threads = 1
     #opt.batch_size = 1    # test code only supports batch_size = 1
