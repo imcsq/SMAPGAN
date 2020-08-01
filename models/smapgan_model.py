@@ -8,9 +8,9 @@ from .grad_loss import grad_loss
 from .L1_grad_loss import L1_grad_loss, L1_rgb_grad_loss
 
 
-class SomGANABLGradL1Model(BaseModel):
+class SmapGANModel(BaseModel):
     """
-    This class implements the ablation version of S2OMGAN model.
+    This class implements the SMAPGAN model.
 
     The model training requires '--dataset_mode unaligned' dataset.
     By default, it uses a '--netG resnet_9blocks' ResNet generator,
@@ -19,25 +19,8 @@ class SomGANABLGradL1Model(BaseModel):
     """
     @staticmethod
     def modify_commandline_options(parser, is_train=True):
-        """Add new dataset-specific options, and rewrite default values for existing options.
 
-        Parameters:
-            parser          -- original option parser
-            is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
-
-        Returns:
-            the modified parser.
-
-        For S2OMGAN, in addition to GAN losses, we introduce lambda_A, lambda_B, and lambda_identity for the following losses.
-        A (source domain), B (target domain).
-        Generators: G_A: A -> B; G_B: B -> A.
-        Discriminators: D_A: G_A(A) vs. B; D_B: G_B(B) vs. A.
-        Forward cycle loss:  lambda_A * ||G_B(G_A(A)) - A|| (Eqn. (2) in the paper)
-        Backward cycle loss: lambda_B * ||G_A(G_B(B)) - B|| (Eqn. (2) in the paper)
-        Identity loss (optional): lambda_identity * (||G_A(B) - B|| * lambda_B + ||G_B(A) - A|| * lambda_A) (Sec 5.2 "Photo generation from paintings" in the paper)
-        Dropout is not used in the original S2OMGAN paper.
-        """
-        parser.set_defaults(no_dropout=True)  # default S2OMGAN did not use dropout
+        parser.set_defaults(no_dropout=True)  # default SMAPGAN did not use dropout
         if is_train:
             parser.add_argument('--lambda_A', type=float, default=10.0, help='weight for cycle loss (A -> B -> A)')
             parser.add_argument('--lambda_B', type=float, default=10.0, help='weight for cycle loss (B -> A -> B)')
@@ -46,13 +29,13 @@ class SomGANABLGradL1Model(BaseModel):
         return parser
 
     def l1_origin_plus_rgb_grad_plus_gradloss(self, fake, real):
-        return L1_rgb_grad_loss(fake, real)
+        return torch.nn.L1Loss()(fake, real) + L1_rgb_grad_loss(fake, real) + grad_loss(fake, real) + grad_loss(fake.transpose(-1,-2), real.transpose(-1,-2))
     
     def l1_origin_plus_rgb_grad_plus_gradlossP(self, fake, real):
-        return L1_rgb_grad_loss(fake, real)
+        return 10.*torch.nn.L1Loss()(fake, real) + 10.*L1_rgb_grad_loss(fake, real) + grad_loss(fake, real) + grad_loss(fake.transpose(-1,-2), real.transpose(-1,-2))
     
     def __init__(self, opt):
-        """Initialize the S2OMGAN class.
+        """Initialize the SMAPGAN class.
 
         Parameters:
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
@@ -65,8 +48,8 @@ class SomGANABLGradL1Model(BaseModel):
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
         visual_names_A = ['real_A', 'fake_B', 'rec_A']
         visual_names_B = ['real_B', 'fake_A', 'rec_B']
-        self.opt.lambda_A = 10.0##!!!!!!
-        self.opt.lambda_B = 10.0##!!!!!!
+        self.opt.lambda_A = 10.0
+        self.opt.lambda_B = 10.0
         if self.isTrain and self.opt.lambda_identity > 0.0:  # if identity loss is used, we also visualize idt_B=G_A(B) ad idt_A=G_A(B)
             visual_names_A.append('idt_B')
             visual_names_B.append('idt_A')
@@ -157,15 +140,11 @@ class SomGANABLGradL1Model(BaseModel):
         """Calculate GAN loss for discriminator D_A"""
         fake_B = self.fake_B_pool.query(self.fake_B)
         self.loss_D_A = self.backward_D_basic(self.netD_A, self.real_B, fake_B)
-#         fake_AB = self.fake_B_pool.query(torch.cat((self.real_A, self.fake_B), 1))
-#         self.loss_D_A = self.backward_D_basic(self.netD_A, torch.cat((self.real_A, self.real_B), 1), fake_AB)
 
     def backward_D_B(self):
         """Calculate GAN loss for discriminator D_B"""
         fake_A = self.fake_A_pool.query(self.fake_A)
         self.loss_D_B = self.backward_D_basic(self.netD_B, self.real_A, fake_A)
-#         fake_BA = self.fake_A_pool.query(torch.cat((self.real_B, self.fake_A), 1))
-#         self.loss_D_B = self.backward_D_basic(self.netD_B, torch.cat((self.real_B, self.real_A), 1), fake_BA)
 
     def backward_G(self, lambda_paired_loss = 0.):
         """Calculate the loss for generators G_A and G_B"""
@@ -187,10 +166,8 @@ class SomGANABLGradL1Model(BaseModel):
 
         # GAN loss D_A(G_A(A))
         self.loss_G_A = self.criterionGAN(self.netD_A(self.fake_B), True)
-#         self.loss_G_A = self.criterionGAN(self.netD_A(torch.cat((self.real_A, self.fake_B), 1)), True)
         # GAN loss D_B(G_B(B))
         self.loss_G_B = self.criterionGAN(self.netD_B(self.fake_A), True)
-#         self.loss_G_B = self.criterionGAN(self.netD_B(torch.cat((self.real_B, self.fake_A), 1)), True)
         # Forward cycle loss || G_B(G_A(A)) - A||
         self.loss_cycle_A = self.criterionCycleA(self.rec_A, self.real_A) * lambda_A
         # Backward cycle loss || G_A(G_B(B)) - B||
@@ -213,10 +190,9 @@ class SomGANABLGradL1Model(BaseModel):
     def optimize_parameters(self, lambda_paired_loss = 0., epoch_ratio = 0.):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         # forward
-#         self.forward()      # compute fake images and reconstruction images.
         self.fake_B = self.netG_A(self.real_A)  # G_A(A)
         self.fake_A = self.netG_B(self.real_B)  # G_B(B)
-        if epoch_ratio > 0.5:
+        if epoch_ratio > 0.75:
             self.rec_A = self.netG_B(self.fake_B.detach())   # G_B(freeze[G_A](A))
             self.rec_B = self.netG_A(self.fake_A.detach())   # G_A(freeze[G_B](B))
         else:

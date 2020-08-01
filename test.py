@@ -13,8 +13,8 @@ Example (You need to train models first or download pre-trained models from our 
     Test a CycleGAN model (one side only):
         python test.py --dataroot datasets/horse2zebra/testA --name horse2zebra_pretrained --model test --no_dropout
 
-    Test a SOMGAN model:
-        python test.py --dataroot datasets/maps --name maps_somgan --model somgan
+    Test a SMAPGAN model:
+        python test.py --dataroot datasets/maps --name maps_smapgan --model smapgan
 
     The option '--model test' is used for generating CycleGAN results only for one side.
     This option will automatically set '--dataset_mode single', which only loads the images from one set.

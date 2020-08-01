@@ -4,8 +4,8 @@ Example:
         python train.py --dataroot ./datasets/maps --name maps_cyclegan --model cycle_gan
     Train a pix2pix model:
         python train.py --dataroot ./datasets/maps --name maps_pix2pix --model pix2pix --direction BtoA
-    Train a S2OMGAN model:
-        python train.py --dataroot ./datasets/maps --name maps_somgan --model somgan
+    Train a SMAPGAN model:
+        python train.py --dataroot ./datasets/maps --name maps_smapgan --model smapgan
 """
 import time
 from options.train_options import TrainOptions

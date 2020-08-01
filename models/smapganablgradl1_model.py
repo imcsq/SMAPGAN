@@ -8,9 +8,9 @@ from .grad_loss import grad_loss
 from .L1_grad_loss import L1_grad_loss, L1_rgb_grad_loss
 
 
-class SomGANABLNoFreezeModel(BaseModel):
+class SmapGANABLGradL1Model(BaseModel):
     """
-    This class implements the ablation version of S2OMGAN model.
+    This class implements the ablation version of SMAPGAN model.
 
     The model training requires '--dataset_mode unaligned' dataset.
     By default, it uses a '--netG resnet_9blocks' ResNet generator,
@@ -28,16 +28,16 @@ class SomGANABLNoFreezeModel(BaseModel):
         Returns:
             the modified parser.
 
-        For S2OMGAN, in addition to GAN losses, we introduce lambda_A, lambda_B, and lambda_identity for the following losses.
+        For SMAPGAN, in addition to GAN losses, we introduce lambda_A, lambda_B, and lambda_identity for the following losses.
         A (source domain), B (target domain).
         Generators: G_A: A -> B; G_B: B -> A.
         Discriminators: D_A: G_A(A) vs. B; D_B: G_B(B) vs. A.
         Forward cycle loss:  lambda_A * ||G_B(G_A(A)) - A|| (Eqn. (2) in the paper)
         Backward cycle loss: lambda_B * ||G_A(G_B(B)) - B|| (Eqn. (2) in the paper)
         Identity loss (optional): lambda_identity * (||G_A(B) - B|| * lambda_B + ||G_B(A) - A|| * lambda_A) (Sec 5.2 "Photo generation from paintings" in the paper)
-        Dropout is not used in the original S2OMGAN paper.
+        Dropout is not used in the original SMAPGAN paper.
         """
-        parser.set_defaults(no_dropout=True)  # default S2OMGAN did not use dropout
+        parser.set_defaults(no_dropout=True)  # default SMAPGAN did not use dropout
         if is_train:
             parser.add_argument('--lambda_A', type=float, default=10.0, help='weight for cycle loss (A -> B -> A)')
             parser.add_argument('--lambda_B', type=float, default=10.0, help='weight for cycle loss (B -> A -> B)')
@@ -46,13 +46,13 @@ class SomGANABLNoFreezeModel(BaseModel):
         return parser
 
     def l1_origin_plus_rgb_grad_plus_gradloss(self, fake, real):
-        return torch.nn.L1Loss()(fake, real) + L1_rgb_grad_loss(fake, real) + grad_loss(fake, real) + grad_loss(fake.transpose(-1,-2), real.transpose(-1,-2))
+        return L1_rgb_grad_loss(fake, real)
     
     def l1_origin_plus_rgb_grad_plus_gradlossP(self, fake, real):
-        return 10.*torch.nn.L1Loss()(fake, real) + 10.*L1_rgb_grad_loss(fake, real) + grad_loss(fake, real) + grad_loss(fake.transpose(-1,-2), real.transpose(-1,-2))
+        return L1_rgb_grad_loss(fake, real)
     
     def __init__(self, opt):
-        """Initialize the S2OMGAN class.
+        """Initialize the SMAPGAN class.
 
         Parameters:
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
@@ -216,7 +216,7 @@ class SomGANABLNoFreezeModel(BaseModel):
 #         self.forward()      # compute fake images and reconstruction images.
         self.fake_B = self.netG_A(self.real_A)  # G_A(A)
         self.fake_A = self.netG_B(self.real_B)  # G_B(B)
-        if False:#epoch_ratio > 0.5:
+        if epoch_ratio > 0.5:
             self.rec_A = self.netG_B(self.fake_B.detach())   # G_B(freeze[G_A](A))
             self.rec_B = self.netG_A(self.fake_A.detach())   # G_A(freeze[G_B](B))
         else:
