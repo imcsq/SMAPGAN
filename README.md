@@ -1,6 +1,6 @@
 # SMAPGAN
 
-Pytorch code for the [paper](https://arxiv.org/pdf/2001.07712) "SMAPGAN: Generative Adversarial Network-Based Semi-Supervised Styled Map Tiles Generation Method" by Xu Chen, Songqiang Chen, Tian Xu, Bangguo Yin, Jian Peng, Xiaoming Mei and Haifeng Li.
+Pytorch code for the paper "SMAPGAN: Generative Adversarial Network-Based Semi-Supervised Styled Map Tiles Generation Method" by Xu Chen, Songqiang Chen, Tian Xu, Bangguo Yin, Jian Peng, Xiaoming Mei and Haifeng Li.
 
 This project contains the implements of CycleGAN, Pix2pix, SMAPGAN and its ablation versions.
 
@@ -62,3 +62,18 @@ python test.py --dataroot datasets/maps/testA --name maps_pretrained --model tes
 ## Acknowledgments
 
 Our code is inspired by [pytorch-CycleGAN](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix).
+
+## Citation Information
+
+If this repository is useful for your research, please kindly consider citing our paper as follow:
+
+```Bibtex
+@article{chen2020tgrs,
+    title={SMAPGAN: Generative Adversarial Network Based Semi-Supervised Styled Map Tiles Generating Method},
+    author={Chen, Xu and Chen, Songqiang and Xu, Tian and Yin, Bangguo and Peng, Jian and Mei, Xiaoming and Li, Haifeng},
+    journal={IEEE Transactions on Geoscience and Remote Sensing},
+    DOI = {10.1109/TGRS.2020.3021819},
+    year={2020},
+    type = {Journal Article}
+}
+```
